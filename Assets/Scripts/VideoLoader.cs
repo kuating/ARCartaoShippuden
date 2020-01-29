@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Video;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using TMPro;
 
 public class VideoLoader : MonoBehaviour
 {
@@ -26,6 +27,14 @@ public class VideoLoader : MonoBehaviour
     private Image mDisk = null;
     private VideoPlayer mVideoPlayer = null;
     private AssetBundle mBundle = null;
+    [SerializeField]
+    private GameObject selectPrefab = null;
+    [SerializeField]
+    private GameObject scrollContent = null;
+    [SerializeField]
+    private GameObject loadScreen = null;
+    
+
 
     void Awake()
     {
@@ -36,11 +45,14 @@ public class VideoLoader : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            StartCoroutine(DownloadAndPlay());
-        }
+        
         mDisk.fillAmount = mLoadFill;
+    }
+
+    public void DownloadAndConfigure()
+    {
+        loadScreen.SetActive(true);
+        StartCoroutine(DownloadAndPlay());
     }
 
     private IEnumerator DownloadAndPlay()
@@ -56,16 +68,24 @@ public class VideoLoader : MonoBehaviour
         for (int i = 0; i < mBundle.GetAllAssetNames().Length; i++)
         {
             Debug.Log((i+1) + " : " + mBundle.GetAllAssetNames()[i]);
-        }
+            var newFileSelect = Instantiate(selectPrefab, scrollContent.transform);
+            newFileSelect.GetComponent<RectTransform>().localPosition = new Vector3(0, scrollContent.GetComponent<RectTransform>().sizeDelta.y - 45 - (100 * i), 0);
+            string[] temp = mBundle.GetAllAssetNames()[i].Split('/');
+            for (int j = 0; j < temp.Length; j++) { Debug.Log(temp[j]); }
+            newFileSelect.GetComponentInChildren<Button>().transform.GetComponentInChildren<TextMeshProUGUI>().text = temp[temp.Length-1].Split('.')[0];
+            newFileSelect.GetComponent<FileSelectInfo>().videoName = temp[temp.Length - 1].Split('.')[0];
+            newFileSelect.GetComponent<FileSelectInfo>().videoIndex = i;
 
-        VideoClip newVideoClip = mBundle.LoadAsset<VideoClip>(fileName);
+        }
+        /*
+        VideoClip newVideoClip = mBundle.LoadAsset<VideoClip>(mBundle.GetAllAssetNames()[0]);
         mVideoPlayer.clip = newVideoClip;
         mVideoPlayer.Play();
         Debug.Log("Saiu!");//
         //while (true) if(mVideoPlayer.isPaused) break;
         Debug.Log("Parou");//
 
-        mVideoPlayer.targetTexture.Release();
+        mVideoPlayer.targetTexture.Release();*/
     }
 
     private IEnumerator GetBundle()
@@ -90,6 +110,7 @@ public class VideoLoader : MonoBehaviour
         }
 
         mLoadFill = 0f;
+        loadScreen.SetActive(false);
 
         if (request.isNetworkError || request.isHttpError)
             Debug.Log(request.error);
