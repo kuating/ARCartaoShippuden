@@ -33,7 +33,6 @@ public class Manager : MonoBehaviour
 
     public void ChangeScreen(int newScreen)
     {
-        
         lastScreen = currentScreen;
         screens[currentScreen].SetActive(false);
         screens[newScreen].SetActive(true);

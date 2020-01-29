@@ -33,11 +33,14 @@ public class VideoLoader : MonoBehaviour
     private GameObject scrollContent = null;
     [SerializeField]
     private GameObject loadScreen = null;
-    
+    [SerializeField]
+    private GameObject errorScreen = null;
+    private Display display;
 
 
     void Awake()
     {
+        display = GameObject.FindGameObjectWithTag("Manager").GetComponent<Manager>().screens[3].GetComponent<Display>();
         mVideoPlayer = GetComponent<VideoPlayer>();
         Caching.compressionEnabled = false;
         if (mClearChache) Caching.ClearCache();
@@ -62,20 +65,26 @@ public class VideoLoader : MonoBehaviour
         if (!mBundle)
         {
             Debug.Log("Falha no Download do Bundle");
+            errorScreen.SetActive(true);
             yield break;
         }
-        
+
+        display.fileInfos = new FileSelectInfo[mBundle.GetAllAssetNames().Length];
+
         for (int i = 0; i < mBundle.GetAllAssetNames().Length; i++)
         {
             Debug.Log((i+1) + " : " + mBundle.GetAllAssetNames()[i]);
             var newFileSelect = Instantiate(selectPrefab, scrollContent.transform);
             newFileSelect.GetComponent<RectTransform>().localPosition = new Vector3(0, scrollContent.GetComponent<RectTransform>().sizeDelta.y - 45 - (100 * i), 0);
+
             string[] temp = mBundle.GetAllAssetNames()[i].Split('/');
-            for (int j = 0; j < temp.Length; j++) { Debug.Log(temp[j]); }
+            //for (int j = 0; j < temp.Length; j++) { Debug.Log(temp[j]); }
             newFileSelect.GetComponentInChildren<Button>().transform.GetComponentInChildren<TextMeshProUGUI>().text = temp[temp.Length-1].Split('.')[0];
             newFileSelect.GetComponent<FileSelectInfo>().videoName = temp[temp.Length - 1].Split('.')[0];
             newFileSelect.GetComponent<FileSelectInfo>().videoIndex = i;
-
+            newFileSelect.GetComponent<FileSelectInfo>().videoClip = mBundle.LoadAsset<VideoClip>(mBundle.GetAllAssetNames()[i]);
+            
+            display.fileInfos[i] = newFileSelect.GetComponent<FileSelectInfo>();
         }
         /*
         VideoClip newVideoClip = mBundle.LoadAsset<VideoClip>(mBundle.GetAllAssetNames()[0]);
